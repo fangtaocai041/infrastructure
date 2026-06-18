@@ -1,0 +1,34 @@
+{"ts": "2026-06-17T04:46:35.912099", "query": "scan:集成测试", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-17T04:46:35.913578", "query": "scan:稳定物种", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-17T04:46:47.625684", "query": "scan:集成测试", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-17T04:46:47.627095", "query": "scan:稳定物种", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-17T11:51:31.505016", "query": "scan:集成测试", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-17T11:51:31.535662", "query": "scan:稳定物种", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-17T11:51:31.579968", "query": "scan:test", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-17T11:51:31.588352", "query": "scan:test", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-17T11:51:31.599771", "query": "scan:Coilia nasus", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-17T12:02:32.245929", "query": "scan:集成测试", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-17T12:02:32.250163", "query": "scan:稳定物种", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-17T12:02:32.315290", "query": "scan:test", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-17T12:02:32.323369", "query": "scan:test", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-17T12:02:32.326914", "query": "scan:Coilia nasus", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T00:58:11.510267", "query": "scan:集成测试", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-18T00:58:11.512358", "query": "scan:稳定物种", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T00:58:11.529115", "query": "scan:test", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-18T00:58:11.530070", "query": "scan:test", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T00:58:11.530963", "query": "scan:Coilia nasus", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:10:33.947741", "query": "scan:集成测试", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-18T01:10:33.949299", "query": "scan:稳定物种", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:10:33.963487", "query": "scan:test", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-18T01:10:33.965440", "query": "scan:test", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:10:33.966480", "query": "scan:Coilia nasus", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:11:52.421500", "query": "scan:集成测试", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-18T01:11:52.423397", "query": "scan:稳定物种", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:11:52.439558", "query": "scan:test", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-18T01:11:52.440876", "query": "scan:test", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:11:52.442554", "query": "scan:Coilia nasus", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:12:47.437971", "query": "scan:集成测试", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-18T01:12:47.439550", "query": "scan:稳定物种", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:12:47.453530", "query": "scan:test", "db": "emergence_engine", "result_count": 1, "useful": true, "details": {"theory_match": 1}}
+{"ts": "2026-06-18T01:12:47.454696", "query": "scan:test", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}
+{"ts": "2026-06-18T01:12:47.455618", "query": "scan:Coilia nasus", "db": "emergence_engine", "result_count": 0, "useful": false, "details": {}}

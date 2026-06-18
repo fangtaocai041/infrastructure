@@ -1,0 +1,89 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "reasonix-infrastructure"
+version = "0.8.0"
+description = "Reasonix 统一涌现检测引擎 — 融合三项目涌现能力: 实时 Z-score 监控、鱼类三层分析、中文生态学 NLP、鱼群目标检测"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Reasonix", email = "reasonix@example.com"},
+]
+keywords = [
+    "emergence-detection",
+    "fish-ecology",
+    "chinese-nlp",
+    "object-detection",
+    "ecological-modeling",
+    "three-layer-analysis",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+# 核心依赖 — 无需额外安装即可运行基础功能
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+# 实时涌现监控 (EmergenceMonitor p-value 统计显著性)
+emergence = [
+    "scipy>=1.10",
+]
+
+# 中文生态学 NLP (分词 / NER / 同义词)
+nlp = [
+    "jiagu>=0.2",
+    "synonyms>=3.18",
+]
+
+# 鱼类图像分类 (60fish / Fish-Vista / DINOv2)
+vision = [
+    "transformers>=4.30",
+    "torch>=2.0",
+    "Pillow>=10.0",
+    "datasets>=2.14",
+]
+
+# 鱼群目标检测 (YOLO / FishDet-M)
+detection = [
+    "ultralytics>=8.0",
+    "opencv-python>=4.8",
+]
+
+# 全部可选依赖
+all = [
+    "scipy>=1.10",
+    "jiagu>=0.2",
+    "synonyms>=3.18",
+    "transformers>=4.30",
+    "torch>=2.0",
+    "Pillow>=10.0",
+    "datasets>=2.14",
+    "ultralytics>=8.0",
+    "opencv-python>=4.8",
+]
+
+# 开发与测试
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["."]
+
+[tool.setuptools.packages.find]
+include = ["infrastructure", "infrastructure.*"]
