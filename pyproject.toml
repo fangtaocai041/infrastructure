@@ -86,4 +86,5 @@ python_files = ["test_*.py"]
 pythonpath = ["."]
 
 [tool.setuptools.packages.find]
-include = ["infrastructure", "infrastructure.*"]
+where = ["."]
+include = ["src", "src.*"]

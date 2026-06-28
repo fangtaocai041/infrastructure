@@ -18,6 +18,8 @@ import pytest
 # 确保 infrastructure 包在路径上
 _INFRA_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_INFRA_DIR))
+# Also add src/ for fish_classifier / chinese_nlp / fish_detector
+sys.path.insert(0, str(_INFRA_DIR / "src"))
 
 
 # ═══════════════════════════════════════════════════════════════
