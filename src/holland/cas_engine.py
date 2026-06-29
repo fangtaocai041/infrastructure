@@ -186,14 +186,16 @@ class CASCognitiveEngine:
             snap = self.diversity_tracker.index.compute(keyword_counts)
             score.diversity = snap.evenness
 
-        # v9.0: 率失真 → Holland 低维性维度
+        # v9.0: PCA有效维度 → Holland 低维性评分
         if data:
             try:
                 from unified_emergence import EmergenceEngine
-                rd = EmergenceEngine.rate_distortion_multi(data)
+                ed = EmergenceEngine.effective_dimension(data)
+                # 低维性得分 = 1 - (effective_dim/total_dim)
+                # 马毅: "数据的高维表示中只有极低维的流形是真实的"
                 score.internal_models = max(
                     score.internal_models,
-                    rd["low_dimensionality_score"]
+                    1.0 - ed["ratio"]
                 )
             except Exception:
                 pass  # 跨模块调用, 失败不影响

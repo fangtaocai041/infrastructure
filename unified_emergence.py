@@ -863,82 +863,136 @@ class EmergenceEngine:
     # 度量的是: 用多少比特把数据编码到预设精度
 
     @staticmethod
-    def rate_distortion(data: list[float], precision: float = 0.05
-                        ) -> dict:
-        """计算时间序列的率失真估计。
+    def effective_dimension(data: dict[str, list],
+                            variance_threshold: float = 0.95) -> dict:
+        """PCA 有效维度 —— 真正的低维性检测。
 
-        马毅核心公式:
-          R(D) = (1/2) × log₂(σ²/D)  当 D ≤ σ² (高斯信源)
-          其中 σ² = 数据方差, D = 允许失真 (precision² × 方差)
+        马毅: "真实数据分布在巨大的高维空间中只占据极低维的流形"
+        这里用 PCA 特征值谱估计: 需要多少个主成分才能解释 95% 方差。
 
         Returns:
-            {rate_bits, distortion, compression_ratio, is_compressible}
-            - rate_bits: 编码每个样本需要的比特数
-            - compression_ratio: 相对原始比特数的压缩比
-            - is_compressible: rate_bits > 0 表示数据可压缩(有低维结构)
+            {effective_dim, total_dim, ratio, is_low_dimensional}
+            - 如果 effective_dim << total_dim → 数据有强低维结构
+            - 如果 ratio > 0.5 → 数据近乎完全随机, 理论匹配无意义
         """
-        n = len(data)
-        if n < 3:
-            return {"rate_bits": 0, "distortion": 0,
-                    "compression_ratio": 1.0, "is_compressible": False}
+        import math
 
-        mean = sum(data) / n
-        variance = sum((x - mean) ** 2 for x in data) / n
-
-        if variance < 1e-9:
-            return {"rate_bits": 0, "distortion": 0,
-                    "compression_ratio": 1.0, "is_compressible": True}
-
-        D = precision ** 2 * variance
-        if D >= variance:
-            return {"rate_bits": 0, "distortion": D,
-                    "compression_ratio": 1.0, "is_compressible": False}
-
-        # 高斯信源的率失真函数
-        rate = max(0, 0.5 * __import__('math').log2(variance / D))
-        raw_bits = 32  # float32 = 32 bits per sample
-        compression = raw_bits / max(rate, 1e-9)
-
-        return {
-            "rate_bits": round(rate, 4),
-            "distortion": round(D, 6),
-            "compression_ratio": round(compression, 2),
-            "is_compressible": rate > 0,
-            "variance": round(variance, 6),
-            "precision": precision,
-        }
-
-    @staticmethod
-    def rate_distortion_multi(data: dict[str, list],
-                               precision: float = 0.05) -> dict:
-        """多变量率失真: 对每维计算后加权平均。
-
-        马毅: "低维性是唯一必要的归纳偏置"
-        — 率失真 R(D) 越大, 说明该维度越可压缩, 低维结构越强。
-        """
-        results = {}
-        total_rate = 0
-        n_dims = 0
+        series = []
         for key, values in data.items():
             if key == "years" or not isinstance(values, list):
                 continue
-            rd = EmergenceEngine.rate_distortion(values, precision)
-            results[key] = rd
-            total_rate += rd["rate_bits"]
-            n_dims += 1
+            if len(values) >= 3:
+                series.append(values)
+
+        total_dim = len(series)
+        if total_dim < 2:
+            return {"effective_dim": total_dim, "total_dim": total_dim,
+                    "ratio": 1.0, "is_low_dimensional": True}
+
+        # 对齐长度
+        min_len = min(len(s) for s in series)
+        aligned = [s[:min_len] for s in series]
+        n = min_len
+
+        # 协方差矩阵 (total_dim × total_dim)
+        means = [sum(s) / n for s in aligned]
+        cov = [[0.0] * total_dim for _ in range(total_dim)]
+        for i in range(total_dim):
+            for j in range(total_dim):
+                cov[i][j] = sum(
+                    (aligned[i][k] - means[i]) * (aligned[j][k] - means[j])
+                    for k in range(n)
+                ) / (n - 1) if n > 1 else 0
+
+        # 特征值: 对 2×2 用解析解, 否则用幂迭代
+        if total_dim == 2:
+            # 2×2 协方差矩阵的解析特征值
+            a, b = cov[0][0], cov[0][1]
+            c, d = cov[1][0], cov[1][1]  # c == b 但用 c 保持形式
+            trace = a + d
+            det = a * d - b * c
+            disc = trace * trace - 4 * det
+            if disc < 0:
+                disc = 0
+            eigenvalues = [
+                (trace + disc ** 0.5) / 2,
+                (trace - disc ** 0.5) / 2,
+            ]
+        else:
+            eigenvalues = EmergenceEngine._power_iteration_eigenvalues(cov, total_dim)
+
+        # 有效维度: 95% 方差需要多少个成分
+        total_var = sum(eigenvalues)
+        if total_var < 1e-9:
+            return {"effective_dim": 1, "total_dim": total_dim,
+                    "ratio": 1.0 / total_dim, "is_low_dimensional": True}
+
+        cumulative = 0
+        effective_dim = 0
+        for ev in sorted(eigenvalues, reverse=True):
+            cumulative += ev / total_var
+            effective_dim += 1
+            if cumulative >= variance_threshold:
+                break
+
+        ratio = effective_dim / total_dim
+
+        # 谱间隙判据: 主导特征值是否远超其他
+        # 如果 λ₁ > 5 × mean(λ₂...λₙ), 数据有强低维结构
+        sorted_ev = sorted(eigenvalues, reverse=True)
+        if total_dim >= 2 and sorted_ev[0] > 1e-9:
+            mean_rest = sum(sorted_ev[1:]) / (total_dim - 1) if total_dim > 1 else 0
+            spectral_gap = sorted_ev[0] / max(mean_rest, 1e-12)
+        else:
+            spectral_gap = 1.0
+
+        is_low_dim = ratio <= 0.75 or spectral_gap > 3.0  # 75%维度内 或 主导特征值3x以上
 
         return {
-            "per_dimension": results,
-            "avg_rate_bits": round(total_rate / max(n_dims, 1), 4),
-            "compressible_dims": sum(
-                1 for r in results.values() if r["is_compressible"]
-            ),
-            "total_dims": n_dims,
-            "low_dimensionality_score": round(
-                sum(1 for r in results.values() if r["is_compressible"])
-                / max(n_dims, 1), 3
-            ),
+            "effective_dim": effective_dim,
+            "total_dim": total_dim,
+            "ratio": round(ratio, 3),
+            "spectral_gap": round(spectral_gap, 1),
+            "is_low_dimensional": is_low_dim,
+            "eigenvalues": [round(e, 4) for e in sorted_ev],
         }
+
+    @staticmethod
+    def _power_iteration_eigenvalues(matrix: list[list[float]],
+                                      n: int) -> list[float]:
+        """用收缩法求所有特征值 (无需 numpy)。
+
+        算法: 幂迭代求最大特征值 → 收缩矩阵 → 重复。
+        O(n³), 但 n 通常很小 (数据维度 ≤ 20)。
+        """
+        import math
+        eigenvalues = []
+        M = [row[:] for row in matrix]  # copy
+
+        for _ in range(n):
+            # 幂迭代求最大特征值
+            v = [1.0] * n
+            for _ in range(50):  # 幂迭代, 通常 < 10 次收敛
+                w = [sum(M[i][j] * v[j] for j in range(n)) for i in range(n)]
+                norm = math.sqrt(sum(x * x for x in w))
+                if norm < 1e-12:
+                    break
+                v = [x / norm for x in w]
+
+            # Rayleigh 商: λ = v^T M v / v^T v
+            Mv = [sum(M[i][j] * v[j] for j in range(n)) for i in range(n)]
+            lam = sum(v[i] * Mv[i] for i in range(n)) / sum(
+                v[i] * v[i] for i in range(n)
+            ) if sum(v[i] * v[i] for i in range(n)) > 1e-12 else 0
+
+            eigenvalues.append(abs(lam))
+
+            # 收缩: M = M - λ v v^T
+            for i in range(n):
+                for j in range(n):
+                    M[i][j] -= lam * v[i] * v[j]
+
+        return eigenvalues
 
     def scan(
         self,
@@ -1032,22 +1086,25 @@ class EmergenceEngine:
 
         # Layer 3: 理论匹配 (先检查数据是否有低维结构)
         if auto_theory:
-            # v9.0: 率失真预检 — 无低维结构则跳理论匹配, 省算力
-            rd = self.rate_distortion_multi(data, precision=0.05)
+            # v9.0: PCA有效维度预检 — 无低维结构则跳理论匹配
+            ed = self.effective_dimension(data)
             results.append({
-                "detection_type": "rate_distortion",
-                "description": (f"率失真: R(D)={rd['avg_rate_bits']:.2f} bits, "
-                               f"低维性={rd['low_dimensionality_score']:.0%}"),
-                "confidence": rd["low_dimensionality_score"],
-                "low_dimensionality_score": rd["low_dimensionality_score"],
-                "compressible_dims": rd["compressible_dims"],
-                **rd,
+                "detection_type": "effective_dimension",
+                "description": (f"PCA有效维度: {ed['effective_dim']}/{ed['total_dim']} "
+                               f"(比={ed['ratio']}), "
+                               f"{'低维结构' if ed['is_low_dimensional'] else '接近随机'}"),
+                "confidence": 1.0 - ed["ratio"],
+                "effective_dim": ed["effective_dim"],
+                "total_dim": ed["total_dim"],
+                "ratio": ed["ratio"],
+                "eigenvalues": ed.get("eigenvalues", []),
             })
 
-            if rd["low_dimensionality_score"] < 0.3:
+            if not ed["is_low_dimensional"]:
                 results.append({
                     "detection_type": "skip_theory",
-                    "description": "数据结构过于随机(R(D)过小), 跳过理论匹配",
+                    "description": (f"数据高维(比={ed['ratio']:.0%}), "
+                                   "理论匹配无意义, 跳过"),
                     "confidence": 0.0,
                 })
                 auto_theory = False  # 跳过后续理论匹配
