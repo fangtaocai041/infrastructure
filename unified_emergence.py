@@ -857,6 +857,89 @@ class EmergenceEngine:
 
     # ── 综合扫描 ──
 
+    # ── v9.0: 率失真度量 (Rate-Distortion) ──
+    # 马毅论点: "压缩 = 智能的数学等价物"
+    # 熵不够——需要率失真 R(D) = min I(X;Z) s.t. E[d(X,Z)] ≤ D
+    # 度量的是: 用多少比特把数据编码到预设精度
+
+    @staticmethod
+    def rate_distortion(data: list[float], precision: float = 0.05
+                        ) -> dict:
+        """计算时间序列的率失真估计。
+
+        马毅核心公式:
+          R(D) = (1/2) × log₂(σ²/D)  当 D ≤ σ² (高斯信源)
+          其中 σ² = 数据方差, D = 允许失真 (precision² × 方差)
+
+        Returns:
+            {rate_bits, distortion, compression_ratio, is_compressible}
+            - rate_bits: 编码每个样本需要的比特数
+            - compression_ratio: 相对原始比特数的压缩比
+            - is_compressible: rate_bits > 0 表示数据可压缩(有低维结构)
+        """
+        n = len(data)
+        if n < 3:
+            return {"rate_bits": 0, "distortion": 0,
+                    "compression_ratio": 1.0, "is_compressible": False}
+
+        mean = sum(data) / n
+        variance = sum((x - mean) ** 2 for x in data) / n
+
+        if variance < 1e-9:
+            return {"rate_bits": 0, "distortion": 0,
+                    "compression_ratio": 1.0, "is_compressible": True}
+
+        D = precision ** 2 * variance
+        if D >= variance:
+            return {"rate_bits": 0, "distortion": D,
+                    "compression_ratio": 1.0, "is_compressible": False}
+
+        # 高斯信源的率失真函数
+        rate = max(0, 0.5 * __import__('math').log2(variance / D))
+        raw_bits = 32  # float32 = 32 bits per sample
+        compression = raw_bits / max(rate, 1e-9)
+
+        return {
+            "rate_bits": round(rate, 4),
+            "distortion": round(D, 6),
+            "compression_ratio": round(compression, 2),
+            "is_compressible": rate > 0,
+            "variance": round(variance, 6),
+            "precision": precision,
+        }
+
+    @staticmethod
+    def rate_distortion_multi(data: dict[str, list],
+                               precision: float = 0.05) -> dict:
+        """多变量率失真: 对每维计算后加权平均。
+
+        马毅: "低维性是唯一必要的归纳偏置"
+        — 率失真 R(D) 越大, 说明该维度越可压缩, 低维结构越强。
+        """
+        results = {}
+        total_rate = 0
+        n_dims = 0
+        for key, values in data.items():
+            if key == "years" or not isinstance(values, list):
+                continue
+            rd = EmergenceEngine.rate_distortion(values, precision)
+            results[key] = rd
+            total_rate += rd["rate_bits"]
+            n_dims += 1
+
+        return {
+            "per_dimension": results,
+            "avg_rate_bits": round(total_rate / max(n_dims, 1), 4),
+            "compressible_dims": sum(
+                1 for r in results.values() if r["is_compressible"]
+            ),
+            "total_dims": n_dims,
+            "low_dimensionality_score": round(
+                sum(1 for r in results.values() if r["is_compressible"])
+                / max(n_dims, 1), 3
+            ),
+        }
+
     def scan(
         self,
         species: str = "",
