@@ -186,6 +186,18 @@ class CASCognitiveEngine:
             snap = self.diversity_tracker.index.compute(keyword_counts)
             score.diversity = snap.evenness
 
+        # v9.0: 率失真 → Holland 低维性维度
+        if data:
+            try:
+                from unified_emergence import EmergenceEngine
+                rd = EmergenceEngine.rate_distortion_multi(data)
+                score.internal_models = max(
+                    score.internal_models,
+                    rd["low_dimensionality_score"]
+                )
+            except Exception:
+                pass  # 跨模块调用, 失败不影响
+
         # ⑥ 内部模型: 如果有预测函数竞争
         if self.model_competition.models:
             emergences = self.model_competition.check_cognitive_emergence()

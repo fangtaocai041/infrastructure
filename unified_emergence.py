@@ -1030,7 +1030,28 @@ class EmergenceEngine:
             except Exception:
                 continue
 
-        # Layer 3: 理论匹配
+        # Layer 3: 理论匹配 (先检查数据是否有低维结构)
+        if auto_theory:
+            # v9.0: 率失真预检 — 无低维结构则跳理论匹配, 省算力
+            rd = self.rate_distortion_multi(data, precision=0.05)
+            results.append({
+                "detection_type": "rate_distortion",
+                "description": (f"率失真: R(D)={rd['avg_rate_bits']:.2f} bits, "
+                               f"低维性={rd['low_dimensionality_score']:.0%}"),
+                "confidence": rd["low_dimensionality_score"],
+                "low_dimensionality_score": rd["low_dimensionality_score"],
+                "compressible_dims": rd["compressible_dims"],
+                **rd,
+            })
+
+            if rd["low_dimensionality_score"] < 0.3:
+                results.append({
+                    "detection_type": "skip_theory",
+                    "description": "数据结构过于随机(R(D)过小), 跳过理论匹配",
+                    "confidence": 0.0,
+                })
+                auto_theory = False  # 跳过后续理论匹配
+
         if auto_theory:
             # Step 1: 计算简单斜率
             observations: dict[str, float] = {}
