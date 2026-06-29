@@ -185,22 +185,6 @@ class CASCognitiveEngine:
                         keyword_counts[kw] = keyword_counts.get(kw, 0) + 1
             snap = self.diversity_tracker.index.compute(keyword_counts)
             score.diversity = snap.evenness
-
-        # v9.0: PCA有效维度 → Holland 低维性评分
-        if data:
-            try:
-                from unified_emergence import EmergenceEngine
-                ed = EmergenceEngine.effective_dimension(data)
-                # 低维性得分 = 1 - (effective_dim/total_dim)
-                # 马毅: "数据的高维表示中只有极低维的流形是真实的"
-                score.internal_models = max(
-                    score.internal_models,
-                    1.0 - ed["ratio"]
-                )
-            except Exception:
-                pass  # 跨模块调用, 失败不影响
-
-        # ⑥ 内部模型: 如果有预测函数竞争
         if self.model_competition.models:
             emergences = self.model_competition.check_cognitive_emergence()
             score.internal_models = min(1.0, len(emergences) * 0.33)

@@ -1084,30 +1084,6 @@ class EmergenceEngine:
             except Exception:
                 continue
 
-        # Layer 3: 理论匹配 (先检查数据是否有低维结构)
-        if auto_theory:
-            # v9.0: PCA有效维度预检 — 无低维结构则跳理论匹配
-            ed = self.effective_dimension(data)
-            results.append({
-                "detection_type": "effective_dimension",
-                "description": (f"PCA有效维度: {ed['effective_dim']}/{ed['total_dim']} "
-                               f"(比={ed['ratio']}), "
-                               f"{'低维结构' if ed['is_low_dimensional'] else '接近随机'}"),
-                "confidence": 1.0 - ed["ratio"],
-                "effective_dim": ed["effective_dim"],
-                "total_dim": ed["total_dim"],
-                "ratio": ed["ratio"],
-                "eigenvalues": ed.get("eigenvalues", []),
-            })
-
-            if not ed["is_low_dimensional"]:
-                results.append({
-                    "detection_type": "skip_theory",
-                    "description": (f"数据高维(比={ed['ratio']:.0%}), "
-                                   "理论匹配无意义, 跳过"),
-                    "confidence": 0.0,
-                })
-                auto_theory = False  # 跳过后续理论匹配
 
         if auto_theory:
             # Step 1: 计算简单斜率
