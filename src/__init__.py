@@ -26,7 +26,8 @@ _INFRA_ROOT = _INFRA_SRC.parent
 if str(_INFRA_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_INFRA_ROOT))
 
-from infrastructure.unified_emergence import (
+# Import from root unified_emergence.py (infrastructure root is on sys.path)
+from unified_emergence import (
     EmergenceType,
     DimensionalLevel,
     EmergenceSignal,

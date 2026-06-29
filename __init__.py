@@ -1,5 +1,5 @@
 # infrastructure — 统一涌现检测引擎 + NLP/分类/检测工具 + 感知桥梁
-from infrastructure.unified_emergence import (
+from unified_emergence import (
     EmergenceType,
     DimensionalLevel,
     EmergenceSignal,
